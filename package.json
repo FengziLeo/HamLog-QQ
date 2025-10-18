@@ -1,0 +1,20 @@
+{
+  "name": "callsignbot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Koishi callsign recorder plugin demo",
+  "main": "plugin.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "koishi start",
+    "dev": "koishi start --watch"
+  },
+  "dependencies": {
+    "@koishijs/cli": "*",
+    "@koishijs/plugin-console": "*",
+    "@koishijs/plugin-database-sqlite": "*",
+    "@koishijs/plugin-database-mysql": "*",
+    "koishi": "*"
+  }
+}
+

@@ -1,0 +1,12 @@
+host:
+  port: 5140
+
+plugins:
+  console: {}
+
+  C:\callsignbot\plugin.js:
+    serverUrl: http://example
+    apiKey: yourkey
+    recordTimeout: 1
+    autoRecall: true
+

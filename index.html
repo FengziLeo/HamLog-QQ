@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UV日志查询系统</title>
+    <style>
+        /* 基础样式设置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px 0;
+        }
+
+        /* 标题区域样式 */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+            .header h1 {
+                color: #165DFF;
+                font-size: 2.2rem;
+                margin-bottom: 12px;
+                position: relative;
+                display: inline-block;
+            }
+
+                .header h1::after {
+                    content: "";
+                    position: absolute;
+                    bottom: -8px;
+                    left: 10%;
+                    width: 80%;
+                    height: 3px;
+                    background-color: #165DFF;
+                    border-radius: 3px;
+                }
+
+            .header p {
+                color: #666;
+                max-width: 600px;
+                margin: 0 auto;
+                font-size: 1.05rem;
+            }
+
+        /* 查询区域样式 */
+        .search-container {
+            background-color: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+
+            .search-container:hover {
+                box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
+            }
+
+        .search-box {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        #callsign {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+            #callsign:focus {
+                border-color: #165DFF;
+                box-shadow: 0 0 0 3px rgba(22, 93, 255, 0.1);
+                outline: none;
+            }
+
+        button {
+            background-color: #165DFF;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 24px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+            button:hover {
+                background-color: #0E4CD1;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(22, 93, 255, 0.2);
+            }
+
+            button:active {
+                transform: translateY(0);
+            }
+
+        .error {
+            color: #e53e3e;
+            font-size: 0.9rem;
+            padding: 5px 0;
+            height: 24px;
+            animation: shake 0.5s ease;
+        }
+
+        /* 结果区域样式 */
+        #result {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        th, td {
+            padding: 14px 18px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        tr {
+            transition: background-color 0.2s ease;
+        }
+
+            tr:nth-child(even) {
+                background-color: #f8fafc;
+            }
+
+            tr:hover {
+                background-color: #f1f5f9;
+            }
+
+        td {
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        /* 空状态和加载样式 */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            color: #64748b;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #165DFF;
+        }
+
+            .loading::after {
+                content: "";
+                display: inline-block;
+                width: 20px;
+                height: 20px;
+                border: 3px solid rgba(22, 93, 255, 0.3);
+                border-radius: 50%;
+                border-top-color: #165DFF;
+                animation: spin 1s ease-in-out infinite;
+                margin-left: 10px;
+            }
+
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .search-container {
+                padding: 20px;
+            }
+
+            .search-box {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            th, td {
+                padding: 10px 12px;
+                font-size: 0.9rem;
+            }
+
+            a:hover {
+                color: #0E4CD1;
+            }
+
+            a:hover span {
+                 width: 100%;
+                }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>UV日志查询系统</h1><br>
+            <a href="https://cq.fz.do/visitor/ujs" target="_blank" style="color: #165DFF; text-decoration: none; border-bottom: 2px solid #165DFF; padding: 2px 0; font-weight: 500; transition: all 0.3s ease; position: relative;">
+                短波日志点我（新页面展示不全，但搜索中会包含）
+                <span style="position: absolute; bottom: -2px; left: 0; width: 0; height: 2px; background-color: #36BFFA; transition: width 0.3s ease;"></span>
+            </a>
+        </div>
+
+        <div class="search-container">
+            <div class="search-box">
+                <input type="text" id="callsign" placeholder="请输入呼号">
+                <button onclick="searchCallsign()">查询</button>
+            </div>
+            <p>注：该页面仅记录自2025年10月15日以来的UV通联</p>
+            <p id="error" class="error"></p>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // 呼号正则验证（不区分大小写）
+        function isValidCallsign(callsign) {
+            const regex = /^[A-Za-z]{1,2}\d{1,4}[A-Za-z]{1,3}$/i;
+            return regex.test(callsign);
+        }
+
+        function searchCallsign() {
+            let callsign = document.getElementById('callsign').value.trim().toUpperCase();
+            const errorElement = document.getElementById('error');
+            const resultElement = document.getElementById('result');
+
+            errorElement.textContent = '';
+
+            // 显示加载状态
+            resultElement.innerHTML = '<div class="loading">正在查询中</div>';
+
+            if (!callsign) {
+                errorElement.textContent = '请输入呼号';
+                resultElement.innerHTML = '';
+                return;
+            }
+
+            if (!isValidCallsign(callsign)) {
+                errorElement.textContent = '请输入有效的呼号格式（如：BG7ABC）';
+                resultElement.innerHTML = '';
+                return;
+            }
+
+            // 使用原始代码中的fetch请求逻辑
+            fetch('query.php?callsign=' + encodeURIComponent(callsign))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        errorElement.textContent = data.error;
+                        resultElement.innerHTML = '';
+                        return;
+                    }
+
+                    if (data.length === 0) {
+                        resultElement.innerHTML = '<div class="empty-state">未找到该呼号的记录</div>';
+                        return;
+                    }
+
+                    let html = '<table>';
+                    html += '<tr><th>序号</th><th>呼号</th><th>记录日期</th></tr>';
+
+                    data.forEach((record, index) => {
+                        const date = new Date(record.timestamp);
+                        const dateStr = date.toLocaleDateString();
+                        html += `<tr>
+                                <td>${index + 1}</td>
+                                <td>${record.callsigns.toUpperCase()}</td>
+                                <td>${dateStr}</td>
+                            </tr>`;
+                    });
+
+                    html += '</table>';
+                    resultElement.innerHTML = html;
+                })
+                .catch(error => {
+                    errorElement.textContent = '查询失败: ' + error.message;
+                    resultElement.innerHTML = '';
+                });
+        }
+
+        // 支持回车键查询
+        document.getElementById('callsign').addEventListener('keyup', function (event) {
+            if (event.key === 'Enter') {
+                searchCallsign();
+            }
+        });
+    </script>
+</body>
+</html>
